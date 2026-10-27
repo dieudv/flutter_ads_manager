@@ -1,6 +1,6 @@
 name: ads_manager
 description: Reusable AdMob manager for Flutter with placements, ad rules, cooldown, premium and temporary ad disabling.
-version: 0.1.0
+version: 0.0.1
 publish_to: none
 
 environment:

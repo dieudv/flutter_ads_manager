@@ -37,8 +37,9 @@ class _AdsBannerState extends State<AdsBanner> {
 
   /// The ONLY place that calls the adaptive-size API. If the SDK changes it, fix it here.
   Future<AdSize> _adaptiveSize(int width) async {
-    final AdSize? size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
-    return size ?? AdSize.banner;
+    // final AdSize? size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
+    // return size ?? AdSize.banner;
+    return AdSize.banner;
   }
 
   @override
