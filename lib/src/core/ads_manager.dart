@@ -19,10 +19,10 @@ import 'ad_events.dart';
 import 'ad_status.dart';
 import 'ads_host.dart';
 
-/// Điểm vào duy nhất của package: `AdsManager.I`.
+/// The single entry point of the package: `AdsManager.I`.
 ///
-/// Là một [ChangeNotifier]: notify mỗi khi điều kiện hiển thị thay đổi
-/// (premium, disable, đủ ngày/thời gian phiên, consent, bật/tắt placement).
+/// It is a [ChangeNotifier]: it notifies whenever the display conditions change
+/// (premium, disable, enough days/session time, consent, placement toggled).
 class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements AdsHost {
   AdsManager._();
 
@@ -61,14 +61,14 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
 
   // ------------------------------------------------------------------ public state
 
-  /// Banner/native hiện được hay chưa (đủ ngày, đủ thời gian phiên, không
-  /// premium, không bị disable, đã có consent). Dùng để ẩn/hiện UI chung.
+  /// Whether banner/native ads may be shown yet (enough days, enough session time, not
+  /// premium, not disabled, consent obtained). Use it to show/hide shared UI.
   ValueListenable<bool> get adsEnabled => _adsEnabled;
 
   ValueListenable<bool> get isPremium => _isPremium;
 
-  /// Thời gian còn lại của "tắt quảng cáo theo giờ", `null` nếu không bị tắt.
-  /// Cập nhật mỗi giây khi đang đếm ngược nên dùng được cho UI countdown.
+  /// Time remaining on the timed "disable ads" period, `null` if ads are not disabled.
+  /// Updated every second while counting down, so it can drive a countdown UI.
   ValueListenable<Duration?> get disabledRemaining => _disabledRemaining;
 
   ValueListenable<bool> get isFullscreenAdShowing => _fullscreenShowing;
@@ -77,29 +77,29 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
 
   bool get isInitialized => _initialized;
 
-  /// Trạng thái load của một placement.
+  /// Load status of a placement.
   ValueListenable<AdStatus> statusOf(AdPlacement placement) => statusNotifier(placement);
 
-  /// Ad đã load xong VÀ luật cho phép load (premium/disable...). Không tính
-  /// cooldown (cooldown tạm thời, nên không dùng để ẩn nút).
+  /// The ad has loaded AND the rules allow loading (premium/disable...). Cooldown is not
+  /// counted (it is temporary, so it should not be used to hide a button).
   bool isReady(AdPlacement placement) =>
       statusNotifier(placement).value == AdStatus.loaded && _gate(placement, show: false).allowed;
 
-  /// Banner/native có được hiển thị lúc này không.
+  /// Whether a banner/native ad may be shown right now.
   bool canShowPassive(AdPlacement placement) => _gate(placement, show: true).allowed;
 
-  /// Giải thích vì sao placement đang bị chặn (hoặc `allowed`). Dùng khi debug.
+  /// Explains why a placement is blocked (or `allowed`). Useful for debugging.
   AdGateResult explain(AdPlacement placement) => _gate(placement, show: true);
 
   String debugSummary() => _policy.debugSummary();
 
   // ------------------------------------------------------------------ init
 
-  /// Khởi tạo. Gọi một lần trong `main()` sau `WidgetsFlutterBinding.ensureInitialized()`.
+  /// Initializes the manager. Call once in `main()` after `WidgetsFlutterBinding.ensureInitialized()`.
   ///
-  /// - [isPremium]: truyền trạng thái premium đã biết để tránh flash quảng cáo.
-  /// - [gatherConsent]: chạy UMP trước khi khởi tạo SDK (bắt buộc với user EEA/UK).
-  /// - [storage] và [clock]: thay thế khi test.
+  /// - [isPremium]: pass the already-known premium state to avoid flashing ads.
+  /// - [gatherConsent]: runs UMP before initializing the SDK (required for EEA/UK users).
+  /// - [storage] and [clock]: replace them in tests.
   Future<void> initialize(
     AdsConfig config, {
     bool isPremium = false,
@@ -149,7 +149,7 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
     await MobileAds.instance.initialize();
   }
 
-  /// Gọi sau khi user thay đổi lựa chọn consent (vd qua Privacy options form).
+  /// Call after the user changes their consent choice (e.g. via the Privacy options form).
   Future<void> refreshConsent() async {
     if (!_initialized || !_supported) return;
     _canRequestAds = await ConsentHelper.canRequestAds();
@@ -157,7 +157,7 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
     _recompute(force: true);
   }
 
-  /// Áp dụng cấu hình mới lúc runtime (vd từ Firebase Remote Config).
+  /// Applies a new configuration at runtime (e.g. from Firebase Remote Config).
   void updateConfig(AdsConfig config) {
     _config = config;
     _policy.rules = config.rules;
@@ -166,15 +166,15 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
     _scheduleTimers();
   }
 
-  // ------------------------------------------------------------------ điều khiển
+  // ------------------------------------------------------------------ controls
 
   void setPremium(bool value) {
     _policy.setPremium(value);
     _recompute();
   }
 
-  /// Tắt quảng cáo trong [duration]. Xem [AdPolicy.disableFor].
-  /// Ví dụ: xem rewarded để bỏ quảng cáo 24h, cộng dồn.
+  /// Disables ads for [duration]. See [AdPolicy.disableFor].
+  /// Example: watch a rewarded ad to remove ads for 24h, accumulating.
   Future<void> disableAdsFor(Duration duration, {bool accumulate = false}) async {
     await _policy.disableFor(duration, accumulate: accumulate);
     _recompute();
@@ -187,7 +187,7 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
     _scheduleTimers();
   }
 
-  /// Bật/tắt một placement lúc runtime (A/B test, remote kill-switch).
+  /// Enables/disables a placement at runtime (A/B test, remote kill switch).
   void setPlacementEnabled(String placementName, bool enabled) {
     enabled ? _disabledPlacements.remove(placementName) : _disabledPlacements.add(placementName);
     _recompute(force: true);
@@ -204,14 +204,14 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
   Future<AdShowResult> showRewardedInterstitial(AdPlacement p) => _show(p, AdFormat.rewardedInterstitial);
   Future<AdShowResult> showRewarded(AdPlacement p) => _show(p, AdFormat.rewarded);
 
-  /// Hiện App Open thủ công. Mặc định dùng placement trong config.
+  /// Shows App Open manually. Uses the placement from the config by default.
   Future<AdShowResult> showAppOpen([AdPlacement? placement]) {
     final p = placement ?? _config.appOpenPlacement;
     if (p == null) return Future.value(const AdShowResult.blocked(AdGateResult.blocked(AdBlockReason.placementDisabled)));
     return _show(p, AdFormat.appOpen);
   }
 
-  /// Dùng ở splash: chờ App Open load tối đa [timeout] rồi hiện.
+  /// Use on the splash screen: waits up to [timeout] for App Open to load, then shows it.
   Future<AdShowResult> showAppOpenOnLaunch({Duration timeout = const Duration(seconds: 4)}) async {
     final p = _config.appOpenPlacement;
     if (p == null) return const AdShowResult.blocked(AdGateResult.blocked(AdBlockReason.placementDisabled));
@@ -225,18 +225,18 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
   }
 
   Future<AdShowResult> _show(AdPlacement p, AdFormat expected) {
-    assert(p.format == expected, '${p.name} là ${p.format.name}, không phải ${expected.name}');
+    assert(p.format == expected, '${p.name} is ${p.format.name}, not ${expected.name}');
     return _controllerFor(p).show();
   }
 
-  /// Bọc các thao tác làm app vào nền/quay lại (xin quyền, image picker,
-  /// share sheet...) để App Open không tự hiện khi app resume sau đó.
+  /// Wraps operations that send the app to the background and back (permission requests, image picker,
+  /// share sheet...) so App Open does not show automatically when the app resumes afterwards.
   Future<T> runWithoutAppOpen<T>(Future<T> Function() action) async {
     _appOpenSuppressed++;
     try {
       return await action();
     } finally {
-      // Chờ 1s vì sự kiện resumed có thể đến sau khi action kết thúc.
+      // Wait 1s because the resumed event may arrive after the action finishes.
       Timer(const Duration(seconds: 1), () => _appOpenSuppressed--);
     }
   }
@@ -284,7 +284,7 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
     _recompute();
   }
 
-  // ------------------------------------------------------------------ gate nội bộ
+  // ------------------------------------------------------------------ internal gate
 
   AdGateResult _globalGate(AdFormat format, {required bool show}) {
     if (!_supported) return const AdGateResult.blocked(AdBlockReason.unsupportedPlatform);
@@ -313,13 +313,13 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
           return AppOpenController(this, p);
         case AdFormat.banner:
         case AdFormat.nativeAdvanced:
-          throw ArgumentError('${p.name}: banner/native dùng widget AdsBanner/AdsNative, không dùng show*()');
+          throw ArgumentError('${p.name}: banner/native use the AdsBanner/AdsNative widgets, not show*()');
       }
     });
   }
 
-  /// Tính lại các giá trị công khai; nếu điều kiện load/show thay đổi thì
-  /// notify và đồng bộ lại các controller (load hoặc huỷ ad đang giữ).
+  /// Recomputes the public values; if the load/show conditions changed,
+  /// notifies and re-syncs the controllers (load, or discard the held ad).
   void _recompute({bool force = false}) {
     _isPremium.value = _policy.isPremium;
     _disabledRemaining.value = _policy.disabledRemaining;
@@ -349,7 +349,7 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
     }
   }
 
-  /// Hẹn giờ để UI/controller tự cập nhật khi hết hạn disable hoặc đủ thời gian phiên.
+  /// Schedules timers so the UI/controllers update when the disable period expires or the session time is reached.
   void _scheduleTimers() {
     _ticker?.cancel();
     _unlockTimer?.cancel();
@@ -382,18 +382,18 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
     _pausedAt = null;
     final pausedFor = pausedAt == null ? Duration.zero : _clock().difference(pausedAt);
 
-    await _policy.registerAppOpen(); // qua ngày mới khi app nằm nền
+    await _policy.registerAppOpen(); // new day while the app was in the background
     if (pausedFor > _policy.rules.sessionResetAfterBackground) {
       _policy.startSession();
       _scheduleTimers();
     }
     _recompute();
-    _syncControllers(); // load lại ad hỏng hoặc hết hạn
+    _syncControllers(); // reload failed or expired ads
 
     if (!_config.autoShowAppOpenOnResume) return;
     final p = _config.appOpenPlacement;
     if (p == null || _appOpenSuppressed > 0 || isFullscreenShowing) return;
-    // Đóng ad full-screen cũng bắn "resumed": bỏ qua nếu vừa đóng xong.
+    // Closing a full-screen ad also fires "resumed": skip if one just closed.
     final lastEnd = _lastFullscreenEndAt;
     if (lastEnd != null && _clock().difference(lastEnd) < const Duration(milliseconds: 1500)) return;
 
@@ -409,7 +409,7 @@ class _EventDispatcher extends AdsEventListener {
       try {
         fn(l);
       } catch (e) {
-        debugPrint('[Ads] event listener error: $e'); // analytics lỗi không được làm hỏng ads
+        debugPrint('[Ads] event listener error: $e'); // an analytics error must not break ads
       }
     }
   }

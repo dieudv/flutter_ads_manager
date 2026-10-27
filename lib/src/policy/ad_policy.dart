@@ -5,10 +5,10 @@ import '../config/ad_rules.dart';
 import '../storage/ad_storage.dart';
 import 'ad_gate.dart';
 
-/// Toàn bộ logic "có được load / được show ad hay không".
+/// All the logic for "may an ad be loaded / shown".
 ///
-/// Thuần Dart (không import SDK), nhận giờ và storage từ bên ngoài
-/// nên unit test được dễ dàng.
+/// Pure Dart (no SDK import); the clock and storage are injected,
+/// so it is easy to unit test.
 class AdPolicy {
   AdPolicy({
     required AdStorage storage,
@@ -39,7 +39,7 @@ class AdPolicy {
   int get activeDays => _activeDays;
   bool get isPremium => _isPremium;
 
-  /// Nạp dữ liệu đã lưu, ghi nhận lần mở app hiện tại và bắt đầu phiên mới.
+  /// Loads saved data, records the current app open and starts a new session.
   Future<void> init() async {
     _activeDays = await _storage.getInt(_kActiveDays) ?? 0;
     _lastOpenDate = await _storage.getString(_kLastOpenDate);
@@ -48,10 +48,10 @@ class AdPolicy {
     await registerAppOpen();
   }
 
-  // ---------------------------------------------------------------- ngày hoạt động
+  // ---------------------------------------------------------------- active days
 
-  /// Nếu hôm nay khác ngày mở app gần nhất thì tăng số ngày hoạt động.
-  /// Gọi an toàn nhiều lần trong ngày. Trả về `true` nếu có tăng.
+  /// Increments the active-day count if today differs from the last app-open date.
+  /// Safe to call several times a day. Returns `true` if the count was incremented.
   Future<bool> registerAppOpen() async {
     final today = _dateKey(_now());
     if (_lastOpenDate == today) return false;
@@ -65,11 +65,11 @@ class AdPolicy {
   static String _dateKey(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-  // ---------------------------------------------------------------- phiên
+  // ---------------------------------------------------------------- session
 
   void startSession() => _sessionStart = _now();
 
-  /// Còn bao lâu nữa thì đủ [AdRules.minSessionTime]. `null` nếu đã đủ.
+  /// Time left until [AdRules.minSessionTime] is reached. `null` if already reached.
   Duration? get sessionUnlockIn {
     final min = _rules.minSessionTime;
     if (min <= Duration.zero) return null;
@@ -83,7 +83,7 @@ class AdPolicy {
 
   void setPremium(bool value) => _isPremium = value;
 
-  // ---------------------------------------------------------------- disable theo giờ
+  // ---------------------------------------------------------------- timed disable
 
   Duration? get disabledRemaining {
     final until = _disabledUntilMs;
@@ -94,9 +94,9 @@ class AdPolicy {
 
   bool get isTemporarilyDisabled => disabledRemaining != null;
 
-  /// Tắt quảng cáo trong [duration].
-  /// - [accumulate] = true: cộng dồn vào thời gian còn lại (max(now, until) + duration).
-  /// - [accumulate] = false: đặt lại thành now + duration.
+  /// Disables ads for [duration].
+  /// - [accumulate] = true: accumulates onto the remaining time (max(now, until) + duration).
+  /// - [accumulate] = false: resets to now + duration.
   Future<void> disableFor(Duration duration, {bool accumulate = false}) async {
     final nowMs = _now().millisecondsSinceEpoch;
     final base = accumulate ? math.max(nowMs, _disabledUntilMs ?? 0) : nowMs;
@@ -111,7 +111,7 @@ class AdPolicy {
 
   // ---------------------------------------------------------------- cooldown full-screen
 
-  /// Gọi khi BẤT KỲ quảng cáo toàn màn hình nào được đóng.
+  /// Call when ANY full-screen ad is closed.
   void markFullscreenDismissed() => _lastFullscreenDismissedAt = _now();
 
   Duration? cooldownRemaining(AdFormat f) {
@@ -121,11 +121,11 @@ class AdPolicy {
     return left > Duration.zero ? left : null;
   }
 
-  // ---------------------------------------------------------------- cổng quyết định
+  // ---------------------------------------------------------------- decision gate
 
   bool _bypasses(AdFormat f) => f == AdFormat.rewarded && _rules.rewardedBypassRules;
 
-  /// Có được phép load (tốn request) hay không.
+  /// Whether loading is allowed (it costs an ad request).
   AdGateResult canLoad(AdFormat f) {
     if (_isPremium) return const AdGateResult.blocked(AdBlockReason.premium);
     if (_bypasses(f)) return const AdGateResult.ok();
@@ -139,7 +139,7 @@ class AdPolicy {
     return const AdGateResult.ok();
   }
 
-  /// Có được phép hiển thị ngay lúc này hay không.
+  /// Whether the ad may be shown right now.
   AdGateResult canShow(AdFormat f) {
     final load = canLoad(f);
     if (!load.allowed) return load;

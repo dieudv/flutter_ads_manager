@@ -3,21 +3,21 @@ import '../policy/ad_gate.dart';
 enum AdStatus { idle, loading, loaded, showing, failed }
 
 enum AdShowStatus {
-  /// Ad đã hiển thị và đã đóng.
+  /// The ad was shown and closed.
   shown,
 
-  /// Bị luật chặn (xem [AdShowResult.gate]).
+  /// Blocked by the rules (see [AdShowResult.gate]).
   blocked,
 
-  /// Chưa load xong. Manager sẽ tự load để lần sau dùng được.
+  /// Not loaded yet. The manager loads it so it is available next time.
   notReady,
 
-  /// SDK báo lỗi khi show.
+  /// The SDK reported an error while showing.
   failed,
 }
 
-/// Kết quả của `show*`. Future hoàn tất SAU KHI ad đóng, nên có thể
-/// `await` rồi điều hướng tiếp.
+/// Result of `show*`. The Future completes AFTER the ad closes, so you can
+/// `await` it and then navigate onward.
 class AdShowResult {
   const AdShowResult._(this.status, {this.gate, this.rewardEarned = false});
 
@@ -30,7 +30,7 @@ class AdShowResult {
   final AdShowStatus status;
   final AdGateResult? gate;
 
-  /// Chỉ có ý nghĩa với rewarded / rewarded interstitial.
+  /// Only meaningful for rewarded / rewarded interstitial.
   final bool rewardEarned;
 
   bool get shown => status == AdShowStatus.shown;

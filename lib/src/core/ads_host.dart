@@ -7,8 +7,8 @@ import '../policy/ad_gate.dart';
 import 'ad_events.dart';
 import 'ad_status.dart';
 
-/// Phần của AdsManager mà controller/widget cần dùng.
-/// Tách thành interface để controller không phụ thuộc trực tiếp vào singleton.
+/// The part of AdsManager that controllers/widgets need.
+/// Split into an interface so controllers do not depend directly on the singleton.
 abstract class AdsHost {
   DateTime now();
   AdRules get rules;

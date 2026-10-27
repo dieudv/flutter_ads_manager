@@ -17,6 +17,6 @@ export 'src/widgets/ad_builders.dart';
 export 'src/widgets/ads_banner.dart';
 export 'src/widgets/ads_native.dart';
 
-// Các kiểu của SDK xuất hiện trong API công khai (AdsEventListener...).
+// SDK types that appear in the public API (AdsEventListener...).
 export 'package:google_mobile_ads/google_mobile_ads.dart'
     show AdError, LoadAdError, PrecisionType, RewardItem, NativeTemplateStyle, NativeTemplateTextStyle, TemplateType, ConsentDebugSettings, DebugGeography;

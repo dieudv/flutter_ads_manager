@@ -1,4 +1,4 @@
-/// Các loại ad unit của AdMob.
+/// AdMob ad unit types.
 enum AdFormat {
   banner,
   interstitial,
@@ -9,6 +9,6 @@ enum AdFormat {
 }
 
 extension AdFormatX on AdFormat {
-  /// Quảng cáo toàn màn hình (dùng chung một mốc cooldown).
+  /// Full-screen ads (they share a single cooldown reference).
   bool get isFullscreen => this != AdFormat.banner && this != AdFormat.nativeAdvanced;
 }

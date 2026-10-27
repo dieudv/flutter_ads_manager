@@ -1,5 +1,5 @@
-/// Lưu trữ key-value tối thiểu mà AdPolicy cần. Có thể thay bằng
-/// Hive/SecureStorage... bằng cách implement interface này.
+/// Minimal key-value storage that AdPolicy needs. It can be replaced with
+/// Hive/SecureStorage... by implementing this interface.
 abstract class AdStorage {
   Future<int?> getInt(String key);
   Future<void> setInt(String key, int value);
@@ -8,7 +8,7 @@ abstract class AdStorage {
   Future<void> remove(String key);
 }
 
-/// Storage trong bộ nhớ, dùng cho unit test.
+/// In-memory storage, used for unit tests.
 class MemoryAdStorage implements AdStorage {
   final Map<String, Object> data = {};
 

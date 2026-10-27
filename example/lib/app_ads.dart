@@ -1,7 +1,7 @@
 import 'package:ads_manager/ads_manager.dart';
 
-/// Toàn bộ placement của app khai báo tại MỘT chỗ.
-/// Id dưới đây là id test chính thức của Google; thay bằng id thật của bạn.
+/// All of the app's placements are declared in ONE place.
+/// The ids below are Google's official test ids; replace them with your real ids.
 abstract class AppAds {
   static const appOpen = AdPlacement.appOpen('app_open',
       android: 'ca-app-pub-3940256099942544/9257395921', ios: 'ca-app-pub-3940256099942544/5575463023');

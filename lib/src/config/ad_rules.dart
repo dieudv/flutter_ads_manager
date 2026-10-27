@@ -1,6 +1,6 @@
 import 'ad_format.dart';
 
-/// Toàn bộ "luật" hiển thị quảng cáo. Thuần Dart, không phụ thuộc SDK.
+/// All ad display rules. Pure Dart, no SDK dependency.
 class AdRules {
   const AdRules({
     this.minActiveDays = 1,
@@ -14,36 +14,36 @@ class AdRules {
     this.maxLoadRetries = 5,
   });
 
-  /// Chỉ hiện ads khi số ngày hoạt động >= giá trị này.
-  /// Ngày mở app đầu tiên là ngày 1, nên `3` nghĩa là bắt đầu từ ngày thứ 3.
+  /// Ads are shown only when the number of active days is >= this value.
+  /// The first day the app is opened counts as day 1, so `3` means ads start on the 3rd active day.
   final int minActiveDays;
 
-  /// Thời gian dùng tối thiểu trong một phiên trước khi được hiện ads
-  /// (không áp dụng cho App Open vì nó vốn hiện lúc mở/quay lại app).
+  /// Minimum time spent in a session before ads may be shown
+  /// (does not apply to App Open, which is shown when the app opens or resumes).
   final Duration minSessionTime;
 
-  /// Khoảng cách tối thiểu giữa hai quảng cáo toàn màn hình bất kỳ
-  /// (tính từ lúc ad trước ĐÓNG).
+  /// Minimum gap between any two full-screen ads
+  /// (measured from when the previous ad was CLOSED).
   final Duration fullscreenCooldown;
 
-  /// Cooldown riêng cho từng format, ghi đè [fullscreenCooldown].
-  /// Mốc thời gian vẫn dùng chung, chỉ khác khoảng cách yêu cầu.
+  /// Per-format cooldown that overrides [fullscreenCooldown].
+  /// The reference timestamp is still shared; only the required gap differs.
   final Map<AdFormat, Duration> cooldownOverrides;
 
-  /// Rewarded (user chủ động xem) bỏ qua: số ngày, thời gian phiên, cooldown
-  /// và cả trạng thái disable. Chỉ bị chặn khi premium.
+  /// Rewarded ads (user-initiated) skip: active days, session time, cooldown
+  /// and the disabled state. Only blocked for premium users.
   final bool rewardedBypassRules;
 
-  /// `true`: disableAdsFor ẩn cả banner/native. `false`: chỉ chặn full-screen.
+  /// `true`: disableAdsFor also hides banner/native. `false`: only blocks full-screen ads.
   final bool disableBlocksPassiveAds;
 
-  /// App Open ad cũ hơn mức này bị coi là hết hạn và phải load lại.
+  /// An App Open ad older than this is considered expired and must be reloaded.
   final Duration appOpenMaxAge;
 
-  /// Nền quá lâu thì tính là phiên mới (reset [minSessionTime]).
+  /// Staying in the background longer than this starts a new session (resets [minSessionTime]).
   final Duration sessionResetAfterBackground;
 
-  /// Số lần tự retry khi load fail (exponential backoff 2s, 4s, 8s... tối đa 60s).
+  /// Number of automatic retries after a load failure (exponential backoff 2s, 4s, 8s... up to 60s).
   final int maxLoadRetries;
 
   Duration cooldownFor(AdFormat f) => cooldownOverrides[f] ?? fullscreenCooldown;

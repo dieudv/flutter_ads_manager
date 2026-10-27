@@ -2,8 +2,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'fullscreen_ad_controller.dart';
 
-// Mỗi class dưới đây chỉ chứa phần gọi SDK của đúng một format.
-// Nếu google_mobile_ads đổi API thì chỉ cần sửa file này.
+// Each class below contains only the SDK calls for exactly one format.
+// If google_mobile_ads changes its API, only this file needs to change.
 
 class InterstitialController extends FullscreenAdController<InterstitialAd> {
   InterstitialController(super.host, super.placement);

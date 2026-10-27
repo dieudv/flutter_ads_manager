@@ -9,8 +9,8 @@ import '../core/ad_status.dart';
 import '../core/ads_host.dart';
 import '../policy/ad_gate.dart';
 
-/// Callback doanh thu. Tự khai báo để không phụ thuộc tên typedef của SDK
-/// (hiện là `OnPaidEventCallback`); Dart so khớp kiểu hàm theo cấu trúc.
+/// Paid-event (revenue) callback. Declared here so we do not depend on the SDK typedef name
+/// (currently `OnPaidEventCallback`); Dart matches function types structurally.
 typedef AdPaidCallback = void Function(
   Ad ad,
   double valueMicros,
@@ -18,9 +18,9 @@ typedef AdPaidCallback = void Function(
   String currencyCode,
 );
 
-/// Vòng đời chung của quảng cáo toàn màn hình: preload, retry backoff,
-/// kiểm tra hết hạn, show một lần rồi tự load lại.
-/// Subclass chỉ cần cài [requestAd] và [present] (phần gọi SDK).
+/// Shared lifecycle of a full-screen ad: preload, retry with backoff,
+/// expiry check, show once, then reload automatically.
+/// Subclasses only implement [requestAd] and [present] (the SDK calls).
 abstract class FullscreenAdController<T extends AdWithoutView> {
   FullscreenAdController(this.host, this.placement) : status = host.statusNotifier(placement);
 
@@ -33,7 +33,7 @@ abstract class FullscreenAdController<T extends AdWithoutView> {
   int _attempt = 0;
   Timer? _retryTimer;
 
-  /// Thời gian sống tối đa của ad đã load (App Open hết hạn sau ~4 giờ).
+  /// Maximum lifetime of a loaded ad (App Open expires after ~4 hours).
   Duration? get maxAge => null;
 
   bool get _expired {
@@ -76,7 +76,7 @@ abstract class FullscreenAdController<T extends AdWithoutView> {
 
     requestAd(id, host.adRequest, (ad) {
       if (!host.gateLoad(placement).allowed) {
-        // Trạng thái đã đổi trong lúc đang load (premium, disable...).
+        // State changed while loading (premium, disable...).
         ad.dispose();
         status.value = AdStatus.idle;
         return;
@@ -100,7 +100,7 @@ abstract class FullscreenAdController<T extends AdWithoutView> {
     _retryTimer = Timer(Duration(seconds: seconds), load);
   }
 
-  /// Bỏ ad đang giữ (khi premium / bị disable). Không đụng vào ad đang show.
+  /// Drops the held ad (when premium / disabled). Never touches an ad that is showing.
   void discard() {
     if (status.value == AdStatus.showing) return;
     _retryTimer?.cancel();
@@ -115,7 +115,7 @@ abstract class FullscreenAdController<T extends AdWithoutView> {
     _loadedAt = null;
   }
 
-  /// Chờ ad sẵn sàng tối đa [timeout] (dùng cho App Open lúc khởi động).
+  /// Waits up to [timeout] for the ad to be ready (used for App Open at launch).
   Future<bool> waitUntilReady(Duration timeout) {
     if (isReady) return Future.value(true);
     final done = Completer<bool>();
@@ -140,7 +140,7 @@ abstract class FullscreenAdController<T extends AdWithoutView> {
 
   // ------------------------------------------------------------ show
 
-  /// Hiển thị nếu luật cho phép. Future hoàn tất sau khi ad đóng.
+  /// Shows the ad if the rules allow it. The Future completes after the ad is closed.
   Future<AdShowResult> show() async {
     if (host.isFullscreenShowing || status.value == AdStatus.showing) {
       const gate = AdGateResult.blocked(AdBlockReason.fullscreenShowing);
@@ -159,7 +159,7 @@ abstract class FullscreenAdController<T extends AdWithoutView> {
       return const AdShowResult.notReady();
     }
 
-    _ad = null; // ad chỉ dùng được một lần
+    _ad = null; // an ad can only be used once
     final completer = Completer<AdShowResult>();
     var earned = false;
     status.value = AdStatus.showing;
@@ -169,7 +169,7 @@ abstract class FullscreenAdController<T extends AdWithoutView> {
       host.onFullscreenEnded(placement, shown: shown);
       status.value = AdStatus.idle;
       if (!completer.isCompleted) completer.complete(result);
-      load(); // chuẩn bị ad cho lần sau
+      load(); // prepare an ad for next time
     }
 
     final callback = FullScreenContentCallback<T>(

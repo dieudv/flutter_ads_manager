@@ -1,4 +1,4 @@
-/// Lý do một quảng cáo bị chặn (hữu ích khi QA hỏi "sao ad không hiện").
+/// Why an ad is blocked (useful when QA asks why an ad is not showing).
 enum AdBlockReason {
   none,
   unsupportedPlatform,
@@ -22,7 +22,7 @@ class AdGateResult {
 
   final AdBlockReason reason;
 
-  /// Gợi ý còn bao lâu nữa thì hết bị chặn (cooldown, disable, session).
+  /// Hint for how long until the block ends (cooldown, disable, session).
   final Duration? retryAfter;
 
   bool get allowed => reason == AdBlockReason.none;

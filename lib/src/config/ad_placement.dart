@@ -8,7 +8,7 @@ class _TestId {
   final String ios;
 }
 
-/// Test ad unit chính thức của Google. Dùng tự động ở debug mode.
+/// Google's official test ad units. Used automatically in debug mode.
 const Map<AdFormat, _TestId> _testIds = {
   AdFormat.banner: _TestId('ca-app-pub-3940256099942544/6300978111', 'ca-app-pub-3940256099942544/2934735716'),
   AdFormat.interstitial: _TestId('ca-app-pub-3940256099942544/1033173712', 'ca-app-pub-3940256099942544/4411468910'),
@@ -18,10 +18,10 @@ const Map<AdFormat, _TestId> _testIds = {
   AdFormat.appOpen: _TestId('ca-app-pub-3940256099942544/9257395921', 'ca-app-pub-3940256099942544/5575463023'),
 };
 
-/// Một vị trí hiển thị quảng cáo (vd: banner ở màn home).
+/// A place where an ad is shown (e.g. the banner on the home screen).
 ///
-/// Mỗi placement mang theo cả format và id Android/iOS nên không thể
-/// nhầm id banner sang interstitial. [name] phải là duy nhất.
+/// Each placement carries both the format and the Android/iOS ids, so a banner id
+/// can never be used for an interstitial by mistake. [name] must be unique.
 @immutable
 class AdPlacement {
   const AdPlacement._(this.name, this.format, this.androidUnitId, this.iosUnitId, this.enabled);
@@ -44,11 +44,11 @@ class AdPlacement {
   final String androidUnitId;
   final String iosUnitId;
 
-  /// Tắt cứng placement ngay trong code. Có thể tắt lúc runtime qua
+  /// Hard-disables the placement in code. It can be disabled at runtime via
   /// `AdsManager.I.setPlacementEnabled`.
   final bool enabled;
 
-  /// Id theo nền tảng hiện tại, `null` nếu nền tảng không hỗ trợ (web/desktop).
+  /// Unit id for the current platform, `null` if the platform is unsupported (web/desktop).
   String? resolveUnitId({required bool useTestIds}) {
     if (kIsWeb) return null;
     final test = _testIds[format]!;

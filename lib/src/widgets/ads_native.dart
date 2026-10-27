@@ -11,10 +11,10 @@ import '../core/ads_manager.dart';
 
 /// Native advanced ad.
 ///
-/// - Mặc định dùng template của Google (không cần code native): truyền
-///   [templateStyle] (small/medium + màu sắc).
-/// - Muốn giao diện tuỳ biến hoàn toàn: đăng ký `NativeAdFactory` ở Android/iOS
-///   rồi truyền [factoryId].
+/// - By default uses Google's template (no native code needed): pass
+///   [templateStyle] (small/medium + colors).
+/// - For a fully custom look: register a `NativeAdFactory` on Android/iOS
+///   and pass [factoryId].
 class AdsNative extends StatefulWidget {
   const AdsNative({
     super.key,
@@ -23,13 +23,13 @@ class AdsNative extends StatefulWidget {
     this.factoryId,
     this.constraints,
     this.reserveSpace = false,
-  }) : assert(templateStyle == null || factoryId == null, 'Chỉ dùng templateStyle hoặc factoryId');
+  }) : assert(templateStyle == null || factoryId == null, 'Use either templateStyle or factoryId, not both');
 
   final AdPlacement placement;
   final NativeTemplateStyle? templateStyle;
   final String? factoryId;
 
-  /// Mặc định theo kích thước template (small/medium). Bắt buộc nên truyền khi dùng [factoryId].
+  /// Defaults to the template size (small/medium). You should pass it when using [factoryId].
   final BoxConstraints? constraints;
   final bool reserveSpace;
 
@@ -59,7 +59,7 @@ class _AdsNativeState extends State<AdsNative> {
   @override
   void initState() {
     super.initState();
-    assert(widget.placement.format == AdFormat.nativeAdvanced, '${widget.placement.name} không phải native');
+    assert(widget.placement.format == AdFormat.nativeAdvanced, '${widget.placement.name} is not a native placement');
     _ads.addListener(_onGateChanged);
     _load();
   }

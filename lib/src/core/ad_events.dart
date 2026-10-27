@@ -3,8 +3,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../config/ad_placement.dart';
 import '../policy/ad_gate.dart';
 
-/// Lắng nghe sự kiện quảng cáo để đẩy vào analytics (Firebase, AppsFlyer...).
-/// Extend class này và chỉ override những callback cần dùng.
+/// Listens to ad events so they can be forwarded to analytics (Firebase, AppsFlyer...).
+/// Extend this class and override only the callbacks you need.
 class AdsEventListener {
   const AdsEventListener();
 
@@ -18,6 +18,6 @@ class AdsEventListener {
   void onAdBlocked(AdPlacement placement, AdGateResult gate) {}
   void onAdRewardEarned(AdPlacement placement, RewardItem reward) {}
 
-  /// Doanh thu theo từng lần hiển thị. [valueMicros] là đơn vị micro (1e-6).
+  /// Revenue per impression. [valueMicros] is in micro units (1e-6).
   void onAdPaid(AdPlacement placement, double valueMicros, PrecisionType precision, String currencyCode) {}
 }

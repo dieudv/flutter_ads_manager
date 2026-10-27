@@ -3,8 +3,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'ad_placement.dart';
 import 'ad_rules.dart';
 
-/// Cấu hình truyền vào `AdsManager.initialize`.
-/// Có thể `copyWith` rồi gọi `AdsManager.I.updateConfig` (vd từ Remote Config).
+/// Configuration passed to `AdsManager.initialize`.
+/// Can be `copyWith`-ed and passed to `AdsManager.I.updateConfig` (e.g. from Remote Config).
 class AdsConfig {
   const AdsConfig({
     this.rules = const AdRules(),
@@ -19,24 +19,24 @@ class AdsConfig {
 
   final AdRules rules;
 
-  /// `null` = tự động (test id khi debug, id thật khi release).
+  /// `null` = automatic (test ids in debug, real ids in release).
   final bool? useTestIds;
 
-  /// Placement App Open dùng cho cold start và resume.
+  /// App Open placement used for cold start and resume.
   final AdPlacement? appOpenPlacement;
 
-  /// Tự hiện App Open khi app quay lại từ nền.
+  /// Automatically show App Open when the app returns from the background.
   final bool autoShowAppOpenOnResume;
 
-  /// Các placement full-screen preload ngay sau khi khởi tạo.
+  /// Full-screen placements to preload right after initialization.
   final List<AdPlacement> preload;
 
-  /// Tên các placement bị tắt (vd từ Remote Config).
+  /// Names of disabled placements (e.g. from Remote Config).
   final Set<String> disabledPlacements;
 
   final List<String> testDeviceIds;
 
-  /// Tuỳ biến AdRequest (keywords, non-personalized...).
+  /// Customize the AdRequest (keywords, non-personalized ads...).
   final AdRequest Function()? requestBuilder;
 
   AdsConfig copyWith({

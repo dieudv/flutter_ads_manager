@@ -3,9 +3,9 @@ import 'package:flutter/widgets.dart';
 import '../config/ad_placement.dart';
 import '../core/ads_manager.dart';
 
-/// Dựng UI theo việc ad của một placement đã sẵn sàng hay chưa.
+/// Builds UI depending on whether the ad of a placement is ready.
 ///
-/// Ví dụ: chỉ hiện nút "Xem video để bỏ quảng cáo" khi rewarded đã load.
+/// Example: only show the "Watch a video to remove ads" button once the rewarded ad has loaded.
 class AdReadyBuilder extends StatelessWidget {
   const AdReadyBuilder({super.key, required this.placement, required this.builder});
 
@@ -22,8 +22,8 @@ class AdReadyBuilder extends StatelessWidget {
   }
 }
 
-/// Dựng UI theo việc quảng cáo nói chung có đang được bật hay không
-/// (vd ẩn banner container, ẩn nút "Remove ads" khi đã premium).
+/// Builds UI depending on whether ads are enabled in general
+/// (e.g. hide the banner container, hide the "Remove ads" button once premium).
 class AdsEnabledBuilder extends StatelessWidget {
   const AdsEnabledBuilder({super.key, required this.builder});
 

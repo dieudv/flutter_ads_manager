@@ -1,26 +1,26 @@
 # ads_manager
 
-Quản lý AdMob dùng lại được cho nhiều project Flutter. Tách "luật hiển thị" (thuần Dart, test được) khỏi phần gọi SDK.
+Reusable AdMob management for Flutter projects. The display rules (pure Dart, unit-testable) are separated from the code that calls the SDK.
 
-> Phiên bản mục tiêu: `google_mobile_ads ^9.1.0`, Flutter ≥ 3.38.1.
-> Code chưa được compile trong môi trường tạo ra nó. Hãy chạy `flutter pub get && flutter analyze && flutter test` trước. Mọi chỗ gọi SDK nằm ở `formats/fullscreen_controllers.dart`, `widgets/*` và `consent/consent_helper.dart` nên nếu SDK lệch API thì sửa trong các file này.
+> Target versions: `google_mobile_ads ^9.1.0`, Flutter >= 3.38.1.
+> This code has not been compiled in the environment where it was written. Run `flutter pub get && flutter analyze && flutter test` first. All SDK calls live in `formats/fullscreen_controllers.dart`, `widgets/*` and `consent/consent_helper.dart`, so if the SDK API differs, fix it in those files.
 
-## Cài đặt
+## Installation
 
 ```yaml
 dependencies:
   ads_manager:
-    path: ../ads_manager        # hoặc git: url
+    path: ../ads_manager        # or git: url
 ```
 
-Khai báo App ID theo hướng dẫn của `google_mobile_ads`:
-- Android: `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" .../>` trong `AndroidManifest.xml`
-- iOS: `GADApplicationIdentifier` (và `SKAdNetworkItems`) trong `Info.plist`
+Declare your App ID as described by `google_mobile_ads`:
+- Android: `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" .../>` in `AndroidManifest.xml`
+- iOS: `GADApplicationIdentifier` (and `SKAdNetworkItems`) in `Info.plist`
 
-## Dùng nhanh
+## Quick start
 
 ```dart
-// 1. Khai báo placement ở một file
+// 1. Declare placements in one file
 abstract class AppAds {
   static const homeBanner   = AdPlacement.banner('home_banner',   android: '...', ios: '...');
   static const detailBanner = AdPlacement.banner('detail_banner', android: '...', ios: '...');
@@ -29,7 +29,7 @@ abstract class AppAds {
   static const appOpen      = AdPlacement.appOpen('app_open', android: '...', ios: '...');
 }
 
-// 2. Khởi tạo trong main()
+// 2. Initialize in main()
 await AdsManager.I.initialize(
   const AdsConfig(
     rules: AdRules(minActiveDays: 3, minSessionTime: Duration(seconds: 30)),
@@ -40,48 +40,48 @@ await AdsManager.I.initialize(
   gatherConsent: true,
 );
 
-// 3. Dùng
+// 3. Use
 const AdsBanner(placement: AppAds.homeBanner);
-await AdsManager.I.showInterstitial(AppAds.afterSave);  // xong khi ad đóng
+await AdsManager.I.showInterstitial(AppAds.afterSave);  // completes when the ad closes
 final r = await AdsManager.I.showRewarded(AppAds.removeAds);
 if (r.rewardEarned) await AdsManager.I.disableAdsFor(const Duration(hours: 24), accumulate: true);
 AdsManager.I.setPremium(true);
 ```
 
-Debug mode tự dùng test id của Google (`AdsConfig.useTestIds` để ép).
+In debug mode Google's test ids are used automatically (set `AdsConfig.useTestIds` to force either way).
 
-## Luật hiển thị
+## Display rules
 
-| Luật | Cấu hình | Ghi chú |
+| Rule | Configuration | Notes |
 |---|---|---|
-| Số ngày hoạt động tối thiểu | `AdRules.minActiveDays` | Ngày mở app đầu tiên là ngày 1. Đổi ngày theo giờ local, kiểm tra cả khi app resume sau khi nằm nền qua đêm. |
-| Cooldown full-screen | `fullscreenCooldown`, `cooldownOverrides` | Một mốc chung cho Interstitial, Rewarded Interstitial, Rewarded và App Open, tính từ lúc ad đóng. Lưu trong bộ nhớ (reset khi kill app). |
-| Tắt theo giờ | `disableAdsFor(d, accumulate:)` | Lưu bền. `accumulate: true` cộng dồn, `false` đặt lại thành now + d. `disableBlocksPassiveAds` chọn có ẩn cả banner/native hay không. |
-| Thời gian dùng tối thiểu | `minSessionTime` | Tính theo phiên (reset nếu nền quá `sessionResetAfterBackground`). App Open được miễn vì nó vốn hiện lúc mở app. |
-| Premium | `setPremium(bool)` | Chặn tất cả kể cả rewarded, dừng load và huỷ ad đang giữ. |
-| Rewarded | `rewardedBypassRules` | Mặc định bỏ qua ngày, phiên, cooldown, disable (để người dùng cộng dồn thời gian). Vẫn cập nhật mốc cooldown khi đóng. |
+| Minimum active days | `AdRules.minActiveDays` | The first day the app is opened is day 1. The day changes by local time, and it is also checked when the app resumes after staying in the background overnight. |
+| Full-screen cooldown | `fullscreenCooldown`, `cooldownOverrides` | One shared reference time for Interstitial, Rewarded Interstitial, Rewarded and App Open, measured from when the ad closes. Kept in memory (reset when the app is killed). |
+| Timed disable | `disableAdsFor(d, accumulate:)` | Persisted. `accumulate: true` adds to the remaining time, `false` resets to now + d. `disableBlocksPassiveAds` chooses whether banner/native are hidden too. |
+| Minimum session time | `minSessionTime` | Counted per session (reset after the app stays in the background longer than `sessionResetAfterBackground`). App Open is exempt because it is shown when the app opens or resumes. |
+| Premium | `setPremium(bool)` | Blocks everything, including rewarded; stops loading and discards held ads. |
+| Rewarded | `rewardedBypassRules` | By default skips days, session time, cooldown and disable (so users can accumulate time). It still updates the cooldown reference when closed. |
 
-Banner/native chỉ load khi widget được mount và luật cho phép; full-screen được preload và show ngay khi đủ điều kiện.
+Banner/native ads load only while their widget is mounted and the rules allow it; full-screen ads are preloaded and shown as soon as the rules allow.
 
-## Trạng thái để ẩn/hiện UI
+## Ad state for UI
 
 - `AdReadyBuilder(placement:, builder: (ctx, isReady) => ...)`
 - `AdsEnabledBuilder(builder: (ctx, enabled) => ...)`
-- `AdsManager.I.adsEnabled`, `isPremium`, `disabledRemaining` (đếm ngược), `statusOf(placement)` là `ValueListenable`.
-- `AdsManager.I.explain(placement)` trả về lý do bị chặn, `debugSummary()` in trạng thái các luật.
+- `AdsManager.I.adsEnabled`, `isPremium`, `disabledRemaining` (countdown) and `statusOf(placement)` are `ValueListenable`s.
+- `AdsManager.I.explain(placement)` returns why a placement is blocked; `debugSummary()` prints the state of the rules.
 
 ## App Open
 
-- Cold start: ở splash gọi `await AdsManager.I.showAppOpenOnLaunch()`.
-- Resume: tự hiện nếu `autoShowAppOpenOnResume` (mặc định bật). Không hiện ngay sau khi đóng ad full-screen khác.
-- Bọc image picker, xin quyền, share sheet bằng `AdsManager.I.runWithoutAppOpen(() async {...})`.
+- Cold start: call `await AdsManager.I.showAppOpenOnLaunch()` on the splash screen.
+- Resume: shown automatically when `autoShowAppOpenOnResume` is on (the default). It is not shown right after another full-screen ad closes.
+- Wrap the image picker, permission requests and share sheets with `AdsManager.I.runWithoutAppOpen(() async {...})`.
 
 ## Analytics
 
 ```dart
 class MyListener extends AdsEventListener {
   @override
-  void onAdPaid(AdPlacement p, double valueMicros, PrecisionType t, String currency) { /* gửi Firebase */ }
+  void onAdPaid(AdPlacement p, double valueMicros, PrecisionType t, String currency) { /* send to Firebase */ }
 }
 AdsManager.I.addEventListener(MyListener());
 ```
@@ -95,21 +95,21 @@ AdsManager.I.updateConfig(config.copyWith(
 ));
 ```
 
-## Cấu trúc
+## Structure
 
 ```
 lib/src/
   config/    AdFormat, AdPlacement, AdRules, AdsConfig
-  policy/    AdPolicy (luật, thuần Dart), AdGateResult
+  policy/    AdPolicy (rules, pure Dart), AdGateResult
   storage/   AdStorage, MemoryAdStorage, SharedPrefsAdStorage
-  formats/   FullscreenAdController + 4 controller gọi SDK
+  formats/   FullscreenAdController + 4 controllers that call the SDK
   widgets/   AdsBanner, AdsNative, AdReadyBuilder, AdsEnabledBuilder
   core/      AdsManager, AdsEventListener, AdStatus, AdShowResult
   consent/   ConsentHelper (UMP)
 ```
 
-## Giới hạn đã biết
+## Known limitations
 
-- Đổi giờ hệ thống có thể làm sai số ngày hoạt động và thời gian disable (dùng giờ thiết bị).
-- Nhiều widget banner cùng một placement chia sẻ một `statusOf`, trạng thái là của widget cập nhật sau cùng.
-- Chưa có debug overlay; dùng `explain()` / `debugSummary()`.
+- Changing the device clock can corrupt the active-day count and the disable timer (the device time is used).
+- Several banner widgets sharing one placement share one `statusOf`; the status belongs to the widget that updated it last.
+- There is no debug overlay yet; use `explain()` / `debugSummary()`.

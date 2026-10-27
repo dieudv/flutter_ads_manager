@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-/// Bọc UMP (GDPR / US states) của google_mobile_ads.
+/// Wraps UMP (GDPR / US states) from google_mobile_ads.
 class ConsentHelper {
   const ConsentHelper._();
 
-  /// Cập nhật thông tin consent và hiện form nếu cần. Không bao giờ throw.
+  /// Updates consent info and shows the form if required. Never throws.
   static Future<void> gather({ConsentDebugSettings? debugSettings, bool tagForUnderAgeOfConsent = false}) {
     final done = Completer<void>();
     void finish() {
@@ -40,7 +40,7 @@ class ConsentHelper {
 
   static Future<bool> canRequestAds() => ConsentInformation.instance.canRequestAds();
 
-  /// `true` nếu app cần hiện mục "Privacy options" trong Settings.
+  /// `true` if the app must show a "Privacy options" entry in Settings.
   static Future<bool> isPrivacyOptionsRequired() async =>
       await ConsentInformation.instance.getPrivacyOptionsRequirementStatus() ==
       PrivacyOptionsRequirementStatus.required;

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'app_ads.dart';
 
-/// Ví dụ đẩy sự kiện ads sang analytics.
+/// Example of forwarding ad events to analytics.
 class LogAdsListener extends AdsEventListener {
   @override
   void onAdPaid(AdPlacement p, double valueMicros, PrecisionType precision, String currency) =>
@@ -19,14 +19,14 @@ Future<void> main() async {
   await AdsManager.I.initialize(
     const AdsConfig(
       rules: AdRules(
-        minActiveDays: 1, // đặt 3 để chỉ hiện ads từ ngày hoạt động thứ 3
+        minActiveDays: 1, // set to 3 to show ads only from the 3rd active day
         minSessionTime: Duration(seconds: 20),
         fullscreenCooldown: Duration(seconds: 60),
       ),
       appOpenPlacement: AppAds.appOpen,
       preload: [AppAds.afterSave, AppAds.removeAdsReward, AppAds.bonusRewardedInter],
     ),
-    isPremium: false, // lấy từ kết quả kiểm tra in-app purchase
+    isPremium: false, // taken from the in-app purchase check
     gatherConsent: true,
   );
   AdsManager.I.addEventListener(LogAdsListener());
@@ -46,16 +46,16 @@ class HomePage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Đếm ngược thời gian đã tắt quảng cáo.
+          // Countdown of the time ads are disabled.
           ValueListenableBuilder<Duration?>(
             valueListenable: ads.disabledRemaining,
             builder: (_, left, _) => Text(
-              left == null ? 'Quảng cáo đang bật' : 'Đã tắt quảng cáo, còn ${_fmt(left)}',
+              left == null ? 'Ads are enabled' : 'Ads disabled, time left: ${_fmt(left)}',
             ),
           ),
           const SizedBox(height: 12),
 
-          // Chỉ hiện nút khi rewarded đã sẵn sàng.
+          // Only show the button when the rewarded ad is ready.
           AdReadyBuilder(
             placement: AppAds.removeAdsReward,
             builder: (context, ready) => ready
@@ -66,20 +66,20 @@ class HomePage extends StatelessWidget {
                         await ads.disableAdsFor(const Duration(hours: 24), accumulate: true);
                       }
                     },
-                    child: const Text('Xem video để tắt quảng cáo 24h'),
+                    child: const Text('Watch a video to disable ads for 24h'),
                   )
                 : const SizedBox.shrink(),
           ),
 
           FilledButton.tonal(
             onPressed: () async {
-              // Future hoàn tất sau khi ad đóng (hoặc ngay lập tức nếu bị chặn).
+              // The Future completes after the ad closes (or immediately if blocked).
               await ads.showInterstitial(AppAds.afterSave);
               if (context.mounted) {
                 Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const DetailPage()));
               }
             },
-            child: const Text('Lưu rồi sang màn chi tiết (interstitial)'),
+            child: const Text('Save and go to the detail screen (interstitial)'),
           ),
 
           FilledButton.tonal(
@@ -87,19 +87,19 @@ class HomePage extends StatelessWidget {
             child: const Text('Rewarded interstitial'),
           ),
 
-          // Ví dụ thao tác làm app vào nền: không để App Open bật khi quay lại.
+          // Example of an operation that backgrounds the app: do not show App Open on return.
           FilledButton.tonal(
             onPressed: () => ads.runWithoutAppOpen(() async {
               // await ImagePicker().pickImage(...);
               await Future<void>.delayed(const Duration(seconds: 1));
             }),
-            child: const Text('Mở image picker (không hiện App Open)'),
+            child: const Text('Open image picker (no App Open)'),
           ),
 
           ValueListenableBuilder<bool>(
             valueListenable: ads.isPremium,
             builder: (_, premium, _) => SwitchListTile(
-              title: const Text('Premium (ẩn toàn bộ quảng cáo)'),
+              title: const Text('Premium (hides all ads)'),
               value: premium,
               onChanged: ads.setPremium,
             ),
@@ -119,8 +119,8 @@ class DetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Chi tiết')),
-        body: const Center(child: Text('Nội dung')),
+        appBar: AppBar(title: const Text('Detail')),
+        body: const Center(child: Text('Content')),
         bottomNavigationBar: const SafeArea(child: AdsBanner(placement: AppAds.detailBanner)),
       );
 }

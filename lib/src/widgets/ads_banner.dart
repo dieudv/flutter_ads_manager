@@ -9,14 +9,14 @@ import '../config/ad_placement.dart';
 import '../core/ad_status.dart';
 import '../core/ads_manager.dart';
 
-/// Anchored adaptive banner. Tự ẩn khi premium / bị disable / chưa đủ điều kiện
-/// và tự hiện lại khi điều kiện thoả.
+/// Anchored adaptive banner. Hides itself when premium / disabled / conditions are not met
+/// and shows again when the conditions are satisfied.
 class AdsBanner extends StatefulWidget {
   const AdsBanner({super.key, required this.placement, this.reserveSpace = false});
 
   final AdPlacement placement;
 
-  /// `true`: giữ sẵn chiều cao trong lúc chờ ad để layout không bị nhảy.
+  /// `true`: reserves the height while waiting for the ad so the layout does not jump.
   final bool reserveSpace;
 
   @override
@@ -35,7 +35,7 @@ class _AdsBannerState extends State<AdsBanner> {
   int _attempt = 0;
   Timer? _retryTimer;
 
-  /// Chỗ DUY NHẤT gọi API tính kích thước adaptive. Nếu SDK đổi API thì sửa ở đây.
+  /// The ONLY place that calls the adaptive-size API. If the SDK changes it, fix it here.
   Future<AdSize> _adaptiveSize(int width) async {
     final AdSize? size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
     return size ?? AdSize.banner;
@@ -44,7 +44,7 @@ class _AdsBannerState extends State<AdsBanner> {
   @override
   void initState() {
     super.initState();
-    assert(widget.placement.format == AdFormat.banner, '${widget.placement.name} không phải banner');
+    assert(widget.placement.format == AdFormat.banner, '${widget.placement.name} is not a banner placement');
     _ads.addListener(_onGateChanged);
   }
 
@@ -91,7 +91,7 @@ class _AdsBannerState extends State<AdsBanner> {
 
   void _setStatus(AdStatus status) {
     final notifier = _ads.statusNotifier(widget.placement);
-    // Tránh notify trong lúc framework đang build/unmount.
+    // Avoid notifying while the framework is building/unmounting.
     scheduleMicrotask(() => notifier.value = status);
   }
 
@@ -106,7 +106,7 @@ class _AdsBannerState extends State<AdsBanner> {
     final size = await _adaptiveSize(_width);
     _busy = false;
     if (!mounted) return;
-    if (generation != _generation) return _load(); // bị reset trong lúc chờ
+    if (generation != _generation) return _load(); // was reset while waiting
     if (!_ads.canShowPassive(placement)) return;
 
     final events = _ads.events;
