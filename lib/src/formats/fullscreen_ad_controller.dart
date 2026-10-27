@@ -9,6 +9,15 @@ import '../core/ad_status.dart';
 import '../core/ads_host.dart';
 import '../policy/ad_gate.dart';
 
+/// Callback doanh thu. Tự khai báo để không phụ thuộc tên typedef của SDK
+/// (hiện là `OnPaidEventCallback`); Dart so khớp kiểu hàm theo cấu trúc.
+typedef AdPaidCallback = void Function(
+  Ad ad,
+  double valueMicros,
+  PrecisionType precision,
+  String currencyCode,
+);
+
 /// Vòng đời chung của quảng cáo toàn màn hình: preload, retry backoff,
 /// kiểm tra hết hạn, show một lần rồi tự load lại.
 /// Subclass chỉ cần cài [requestAd] và [present] (phần gọi SDK).
@@ -44,7 +53,7 @@ abstract class FullscreenAdController<T extends AdWithoutView> {
   void present(
     T ad,
     FullScreenContentCallback<T> callback,
-    PaidEventCallback onPaid,
+    AdPaidCallback onPaid,
     void Function(RewardItem reward) onReward,
   );
 

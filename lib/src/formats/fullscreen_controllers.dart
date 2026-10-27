@@ -18,7 +18,7 @@ class InterstitialController extends FullscreenAdController<InterstitialAd> {
   }
 
   @override
-  void present(InterstitialAd ad, FullScreenContentCallback<InterstitialAd> callback, PaidEventCallback onPaid, void Function(RewardItem) onReward) {
+  void present(InterstitialAd ad, FullScreenContentCallback<InterstitialAd> callback, AdPaidCallback onPaid, void Function(RewardItem) onReward) {
     ad
       ..fullScreenContentCallback = callback
       ..onPaidEvent = onPaid
@@ -39,7 +39,7 @@ class RewardedInterstitialController extends FullscreenAdController<RewardedInte
   }
 
   @override
-  void present(RewardedInterstitialAd ad, FullScreenContentCallback<RewardedInterstitialAd> callback, PaidEventCallback onPaid, void Function(RewardItem) onReward) {
+  void present(RewardedInterstitialAd ad, FullScreenContentCallback<RewardedInterstitialAd> callback, AdPaidCallback onPaid, void Function(RewardItem) onReward) {
     ad
       ..fullScreenContentCallback = callback
       ..onPaidEvent = onPaid
@@ -60,7 +60,7 @@ class RewardedController extends FullscreenAdController<RewardedAd> {
   }
 
   @override
-  void present(RewardedAd ad, FullScreenContentCallback<RewardedAd> callback, PaidEventCallback onPaid, void Function(RewardItem) onReward) {
+  void present(RewardedAd ad, FullScreenContentCallback<RewardedAd> callback, AdPaidCallback onPaid, void Function(RewardItem) onReward) {
     ad
       ..fullScreenContentCallback = callback
       ..onPaidEvent = onPaid
@@ -84,7 +84,7 @@ class AppOpenController extends FullscreenAdController<AppOpenAd> {
   }
 
   @override
-  void present(AppOpenAd ad, FullScreenContentCallback<AppOpenAd> callback, PaidEventCallback onPaid, void Function(RewardItem) onReward) {
+  void present(AppOpenAd ad, FullScreenContentCallback<AppOpenAd> callback, AdPaidCallback onPaid, void Function(RewardItem) onReward) {
     ad
       ..fullScreenContentCallback = callback
       ..onPaidEvent = onPaid
