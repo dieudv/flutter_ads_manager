@@ -1,0 +1,13 @@
+name: ads_manager_example
+description: Demo for ads_manager.
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+  flutter: ">=3.38.1"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ads_manager:
+    path: ../
