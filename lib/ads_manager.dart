@@ -4,6 +4,7 @@ library;
 export 'src/config/ad_format.dart';
 export 'src/config/ad_placement.dart';
 export 'src/config/ad_rules.dart';
+export 'src/config/ads_banner_size.dart';
 export 'src/config/ads_config.dart';
 export 'src/consent/consent_helper.dart';
 export 'src/core/ad_events.dart';

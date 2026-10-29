@@ -6,15 +6,34 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../config/ad_format.dart';
 import '../config/ad_placement.dart';
+import '../config/ads_banner_size.dart';
 import '../core/ad_status.dart';
 import '../core/ads_manager.dart';
 
-/// Anchored adaptive banner. Hides itself when premium / disabled / conditions are not met
+/// Banner (anchored adaptive by default, see [AdsBannerSize]). Hides itself when premium / disabled / conditions are not met
 /// and shows again when the conditions are satisfied.
 class AdsBanner extends StatefulWidget {
-  const AdsBanner({super.key, required this.placement, this.reserveSpace = false});
+  const AdsBanner({
+    super.key,
+    required this.placement,
+    this.size = AdsBannerSize.anchoredAdaptive,
+    this.adaptiveWidth,
+    this.inlineMaxHeight,
+    this.reserveSpace = false,
+  });
 
   final AdPlacement placement;
+
+  final AdsBannerSize size;
+
+  /// Width (logical pixels) used to compute adaptive sizes. Defaults to the
+  /// screen width; pass the real available width when the banner is narrower
+  /// than the screen (e.g. inside horizontal padding).
+  final double? adaptiveWidth;
+
+  /// Maximum height for [AdsBannerSize.inlineAdaptive]. `null` lets the SDK
+  /// pick based on the current orientation.
+  final double? inlineMaxHeight;
 
   /// `true`: reserves the height while waiting for the ad so the layout does not jump.
   final bool reserveSpace;
@@ -35,11 +54,33 @@ class _AdsBannerState extends State<AdsBanner> {
   int _attempt = 0;
   Timer? _retryTimer;
 
-  /// The ONLY place that calls the adaptive-size API. If the SDK changes it, fix it here.
-  Future<AdSize> _adaptiveSize(int width) async {
-    // final AdSize? size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
-    // return size ?? AdSize.banner;
-    return AdSize.banner;
+  int _computeWidth() => (widget.adaptiveWidth ?? MediaQuery.sizeOf(context).width).truncate();
+
+  /// The ONLY place that maps [AdsBannerSize] to SDK sizes. If the SDK changes
+  /// its adaptive-size API, fix it here.
+  Future<AdSize> _resolveSize(int width) async {
+    switch (widget.size) {
+      case AdsBannerSize.banner:
+        return AdSize.banner;
+      case AdsBannerSize.largeBanner:
+        return AdSize.largeBanner;
+      case AdsBannerSize.mediumRectangle:
+        return AdSize.mediumRectangle;
+      case AdsBannerSize.fullBanner:
+        return AdSize.fullBanner;
+      case AdsBannerSize.leaderboard:
+        return AdSize.leaderboard;
+      case AdsBannerSize.anchoredAdaptive:
+        final AdSize? size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
+        return size ?? AdSize.banner;
+      case AdsBannerSize.inlineAdaptive:
+        final maxHeight = widget.inlineMaxHeight;
+        return Future<AdSize>.value(
+          maxHeight == null
+              ? AdSize.getCurrentOrientationInlineAdaptiveBannerAdSize(width)
+              : AdSize.getInlineAdaptiveBannerAdSize(width, maxHeight.truncate()),
+        );
+    }
   }
 
   @override
@@ -52,10 +93,10 @@ class _AdsBannerState extends State<AdsBanner> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final width = MediaQuery.sizeOf(context).width.truncate();
+    final width = _computeWidth();
     if (width != _width) {
       _width = width;
-      _reset();
+      if (widget.size.isAdaptive) _reset(); // fixed sizes do not depend on the width
       _load();
     }
   }
@@ -63,7 +104,11 @@ class _AdsBannerState extends State<AdsBanner> {
   @override
   void didUpdateWidget(AdsBanner old) {
     super.didUpdateWidget(old);
-    if (old.placement != widget.placement) {
+    if (old.placement != widget.placement ||
+        old.size != widget.size ||
+        old.adaptiveWidth != widget.adaptiveWidth ||
+        old.inlineMaxHeight != widget.inlineMaxHeight) {
+      _width = _computeWidth();
       _reset();
       _load();
     }
@@ -104,7 +149,7 @@ class _AdsBannerState extends State<AdsBanner> {
 
     _busy = true;
     final generation = _generation;
-    final size = await _adaptiveSize(_width);
+    final size = await _resolveSize(_width);
     _busy = false;
     if (!mounted) return;
     if (generation != _generation) return _load(); // was reset while waiting
@@ -117,10 +162,16 @@ class _AdsBannerState extends State<AdsBanner> {
       size: size,
       request: _ads.adRequest,
       listener: BannerAdListener(
-        onAdLoaded: (_) {
+        onAdLoaded: (_) async {
           if (!mounted || !identical(_ad, ad)) {
             ad.dispose();
             return;
+          }
+          if (widget.size == AdsBannerSize.inlineAdaptive) {
+            // The real height of an inline adaptive banner is only known after loading.
+            final real = await ad.getPlatformAdSize();
+            if (!mounted || !identical(_ad, ad)) return;
+            if (real != null) _size = real;
           }
           setState(() => _loaded = true);
           _attempt = 0;
@@ -169,9 +220,10 @@ class _AdsBannerState extends State<AdsBanner> {
     if (!_ads.canShowPassive(widget.placement)) return const SizedBox.shrink();
     final ad = _ad;
     if (ad != null && _loaded) {
+      final shown = _size ?? ad.size;
       return SizedBox(
-        width: ad.size.width.toDouble(),
-        height: ad.size.height.toDouble(),
+        width: shown.width.toDouble(),
+        height: shown.height.toDouble(),
         child: AdWidget(ad: ad),
       );
     }

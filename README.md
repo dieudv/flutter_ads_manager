@@ -42,6 +42,8 @@ await AdsManager.I.initialize(
 
 // 3. Use
 const AdsBanner(placement: AppAds.homeBanner);
+const AdsBanner(placement: AppAds.detailBanner, size: AdsBannerSize.mediumRectangle); // fixed size
+const AdsBanner(placement: AppAds.listBanner, size: AdsBannerSize.inlineAdaptive, adaptiveWidth: 328); // inside a list
 await AdsManager.I.showInterstitial(AppAds.afterSave);  // completes when the ad closes
 final r = await AdsManager.I.showRewarded(AppAds.removeAds);
 if (r.rewardEarned) await AdsManager.I.disableAdsFor(const Duration(hours: 24), accumulate: true);
