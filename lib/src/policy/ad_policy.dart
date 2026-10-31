@@ -94,6 +94,9 @@ class AdPolicy {
 
   bool get isTemporarilyDisabled => disabledRemaining != null;
 
+  /// Ads are currently "free": premium, or inside the timed disable period.
+  bool get isAdFree => _isPremium || isTemporarilyDisabled;
+
   /// Disables ads for [duration].
   /// - [accumulate] = true: accumulates onto the remaining time (max(now, until) + duration).
   /// - [accumulate] = false: resets to now + duration.

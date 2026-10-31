@@ -48,6 +48,13 @@ await AdsManager.I.showInterstitial(AppAds.afterSave);  // completes when the ad
 final r = await AdsManager.I.showRewarded(AppAds.removeAds);
 if (r.rewardEarned) await AdsManager.I.disableAdsFor(const Duration(hours: 24), accumulate: true);
 AdsManager.I.setPremium(true);
+
+if (AdsManager.I.isAdFree.value) { ... }
+
+ValueListenableBuilder<bool>(
+  valueListenable: AdsManager.I.isAdFree,
+  builder: (_, free, _) => free ? const SizedBox.shrink() : const RemoveAdsButton(),
+);
 ```
 
 In debug mode Google's test ids are used automatically (set `AdsConfig.useTestIds` to force either way).

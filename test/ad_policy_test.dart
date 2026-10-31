@@ -198,4 +198,17 @@ void main() {
       expect(policy.canShow(AdFormat.rewarded).reason, AdBlockReason.cooldown);
     });
   });
+
+  group('isAdFree', () {
+    test('true for premium or while disabled, false otherwise', () async {
+      final (policy, clock, _) = await _make();
+      expect(policy.isAdFree, isFalse);
+      await policy.disableFor(const Duration(hours: 1));
+      expect(policy.isAdFree, isTrue);
+      clock.advance(const Duration(hours: 1, seconds: 1));
+      expect(policy.isAdFree, isFalse);
+      policy.setPremium(true);
+      expect(policy.isAdFree, isTrue);
+    });
+  });
 }

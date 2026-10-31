@@ -53,6 +53,7 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
 
   final ValueNotifier<bool> _adsEnabled = ValueNotifier(false);
   final ValueNotifier<bool> _isPremium = ValueNotifier(false);
+  final ValueNotifier<bool> _isAdFree = ValueNotifier(false);
   final ValueNotifier<Duration?> _disabledRemaining = ValueNotifier(null);
   final ValueNotifier<bool> _fullscreenShowing = ValueNotifier(false);
 
@@ -66,6 +67,9 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
   ValueListenable<bool> get adsEnabled => _adsEnabled;
 
   ValueListenable<bool> get isPremium => _isPremium;
+
+  /// `true` when the user is premium or inside the timed "disable ads" period.
+  ValueListenable<bool> get isAdFree => _isAdFree;
 
   /// Time remaining on the timed "disable ads" period, `null` if ads are not disabled.
   /// Updated every second while counting down, so it can drive a countdown UI.
@@ -322,6 +326,7 @@ class AdsManager extends ChangeNotifier with WidgetsBindingObserver implements A
   /// notifies and re-syncs the controllers (load, or discard the held ad).
   void _recompute({bool force = false}) {
     _isPremium.value = _policy.isPremium;
+    _isAdFree.value = _policy.isAdFree;
     _disabledRemaining.value = _policy.disabledRemaining;
 
     var signature = 0;
