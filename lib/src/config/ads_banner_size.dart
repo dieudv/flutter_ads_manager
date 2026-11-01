@@ -20,6 +20,9 @@ enum AdsBannerSize {
   /// 468x60 (tablets)
   fullBanner,
 
+  /// A dynamically sized banner that matches its parent's width and expands/contracts its height to match the ad's content after loading completes.
+  fluid,
+
   /// 728x90 (tablets)
   leaderboard;
 
