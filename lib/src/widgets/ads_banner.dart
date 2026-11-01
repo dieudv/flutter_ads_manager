@@ -68,6 +68,8 @@ class _AdsBannerState extends State<AdsBanner> {
         return AdSize.mediumRectangle;
       case AdsBannerSize.fullBanner:
         return AdSize.fullBanner;
+      case AdsBannerSize.fluid:
+        return AdSize.fluid;
       case AdsBannerSize.leaderboard:
         return AdSize.leaderboard;
       case AdsBannerSize.anchoredAdaptive:
