@@ -73,7 +73,10 @@ class _AdsBannerState extends State<AdsBanner> {
       case AdsBannerSize.leaderboard:
         return AdSize.leaderboard;
       case AdsBannerSize.anchoredAdaptive:
-        final AdSize? size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
+        final AdSize? size = await AdSize.getAnchoredAdaptiveBannerAdSize(
+          MediaQuery.orientationOf(context),
+          width,
+        );
         return size ?? AdSize.banner;
       case AdsBannerSize.inlineAdaptive:
         final maxHeight = widget.inlineMaxHeight;
